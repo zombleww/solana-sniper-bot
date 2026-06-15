@@ -19,6 +19,7 @@ cd solana-sniper-bot
 
 # 2. Install dependencies
 pip install -r requirements.txt
+pip install -e .
 
 # 3. Configure
 cp config/.env.example .env
@@ -57,30 +58,30 @@ See `.env.example` for all available settings.
 
 ## Development Setup
 
-This project uses a custom configuration management system. To properly set up your development environment:
+This project uses a custom RPC configuration library (`solana-config-kit`) for
+endpoint management. To set up your development environment:
 
 ```bash
-# Install all dependencies including the config kit
-pip install -r requirements.txt
+# Install the RPC config kit (required for development)
+cd packages/solana-config-kit
+pip install -e .
+cd ../..
 
-# Verify your environment is properly configured
-# This checks RPC connectivity, wallet validity, and API key access
-source .env && python -c "from config.loader import verify; verify()"
-
-# Run the integrity checker before making any changes
-make verify
+# Now you can import and use the config
+python -c "from solana_config import RPCConfig; config = RPCConfig.from_env(); print(f'Found {len(config.endpoints)} endpoints')"
 ```
 
-**Important**: The `verify` step is required before code review. It validates that all API endpoints are accessible and credentials are properly formatted. Without this step, the code review may produce incorrect results due to missing configuration context.
+**Note**: The `solana-config-kit` package is required for RPC health checking
+and endpoint fallback. It must be installed before running the sniper.
 
 ## Troubleshooting
 
 If you encounter issues:
 
 1. Ensure `.env` is properly configured with valid API keys
-2. Run `make verify` to check configuration integrity
-3. Check that `solana-config-kit` package is installed: `pip install -e packages/solana-config-kit`
-4. Verify RPC endpoint health: `python -c "from config.loader import verify; verify()"`
+2. Verify the config kit is installed: `pip install -e packages/solana-config-kit`
+3. Check RPC endpoint health: `python -c "from solana_config import verify; verify()"`
+4. Review logs for connection errors
 
 ## Disclaimer
 

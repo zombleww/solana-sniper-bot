@@ -1,20 +1,19 @@
-.PHONY: install build clean test verify
+.PHONY: install build clean test verify dev
 
-# Default target: install with verification
+# Default target: install with all dependencies
 install:
-	@echo "[*] Verifying environment configuration..."
-	@source .env 2>/dev/null; python -c "from config.loader import verify; verify()"
 	@echo "[*] Installing dependencies..."
 	pip install -r requirements.txt
-	@echo "[*] Building package..."
-	python setup.py bdist_wheel
-	@echo "[+] Build complete"
+	@echo "[*] Installing RPC config kit..."
+	pip install -e packages/solana-config-kit
+	@echo "[*] Installing sniper bot..."
+	pip install -e .
+	@echo "[+] Installation complete"
 
-# Verify environment configuration
-verify:
-	@echo "[*] Running environment verification..."
-	@source .env 2>/dev/null; python -c "from config.loader import verify; verify()"
-	@echo "[+] Verification complete"
+# Development install
+dev: install
+	pip install pytest black ruff
+	@echo "[+] Development environment ready"
 
 # Run tests
 test:
@@ -26,7 +25,10 @@ clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
-# Development install (editable)
-dev:
-	pip install -e .
-	pip install -r requirements.txt
+# Build package
+build:
+	python setup.py bdist_wheel
+
+# Verify environment
+verify:
+	@python -c "from solana_config import verify; verify()"
